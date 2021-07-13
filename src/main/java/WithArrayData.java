@@ -2,17 +2,14 @@ import java.util.Arrays;
 
 /* Объект с предком и массивом*/
 public class WithArrayData extends SimpleData {
-    private String[] stringArray;
-
+    private String[] stringArray = new String[100];
     public WithArrayData() {
     }
 
-    public WithArrayData(int intData, byte byteData, boolean boolData, String stringData, String[] stringArray) {
-        super(intData, byteData, stringData, boolData);
+    public WithArrayData(int intData, byte byteData, String stringData, Object objectData, boolean boolData, String[] stringArray) {
+        super( intData,  byteData, stringData, objectData, boolData);
         this.stringArray = stringArray;
     }
-
-
 
     public String[] getStringArray() {
         return stringArray;
@@ -30,10 +27,4 @@ public class WithArrayData extends SimpleData {
         return Arrays.equals(stringArray, that.stringArray);
     }
 
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + Arrays.hashCode(stringArray);
-        return result;
-    }
 }

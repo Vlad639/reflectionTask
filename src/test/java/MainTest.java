@@ -6,7 +6,10 @@ import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -33,24 +36,19 @@ class MainTest {
 
     @Test
     public void printFieldsNamesCheck() {
-        Main.publicPrintFieldsNames(new WithArrayData());
+        Main.publicPrintFieldsNames(new WithCollectionData());
         String consoleOut;
         String rez = """      
                 --------------------------------------------
                 Parents fileds:
-                   intData as int
-                   byteData as byte
-                   objectData as java.lang.Object
-                   stringData as java.lang.String
-                Parents methods:
-                   getByteData return byte
-                   getIntData return int
-                   getObjectData return java.lang.Object
-                   setByteData return void
-                   setIntData return void
-                   setObjectData return void
-                Self fields:
                    stringArray as java.lang.String[]
+                Parents methods:
+                   equals return boolean
+                   getStringArray return java.lang.String[]
+                   setStringArray return void
+                Self fields:
+                   listString as java.util.List
+                   mapStringSimpleData as java.util.Map
                 """;
         consoleOut = out.toString();
         consoleOut = consoleOut.replaceAll("\n", "");
@@ -82,9 +80,13 @@ class MainTest {
                    getByteData return byte
                    getIntData return int
                    getObjectData return java.lang.Object
+                   getStringData return java.lang.String
+                   isBoolData return boolean
+                   setBoolData return void
                    setByteData return void
                    setIntData return void
                    setObjectData return void
+                   setStringData return void
                 """;
         consoleOut = out.toString();
         consoleOut = consoleOut.replaceAll("\n", "");
@@ -93,14 +95,66 @@ class MainTest {
         assertEquals(consoleOut, rez);
     }
 
+    @Test
+    public void simpleDataCopyTest(){
+        SimpleData a = new SimpleData(10, (byte)0x34, "str a", null, true);
+        SimpleData b = new SimpleData(20, (byte)0x75, "str b", a, true);
+        SimpleData c = new SimpleData(30, (byte)0x91, "str c", b, true);
+
+        SimpleData d = (SimpleData) Main.copyOf(c);
+
+        a.setStringData("Changed");
+
+        assertEquals(((SimpleData) ((SimpleData) d.getObjectData()).getObjectData()).getStringData(), "str a");
+    }
 
     @Test
-    public void copyTest(){
-        SimpleData a = new SimpleData(32, (byte)0x63, "--a--", true);
-        SimpleData b = new SimpleData(54, (byte)0x53, "--b--", false);
+    public void withArrayDataCopyTest(){
+        String[] arr = {"1", "2", "3", "4", "5"};
+        WithArrayData a = new WithArrayData(10, (byte)0x34, "str a", null, true, arr);
 
-        a = (SimpleData) Main.copyOf(new SimpleData(54, (byte)0x53, "--b--", false));
-        assertEquals(a, b);
+        WithArrayData test = (WithArrayData) Main.copyOf(a);
+        a.setStringArray(new String[]{"0", "0", "0", "0", "0"});
+        assertEquals(test.getStringArray()[2], "3");
+    }
+
+    @Test
+    public void withCollectionDataListCopyTest(){
+        String[] arr = {"1", "2", "3", "4", "5"};
+        ArrayList<String> list = new ArrayList<>(Arrays.asList(arr));
+        SimpleData a = new SimpleData(10, (byte)0x34, "str a", null, true);
+        SimpleData b = new SimpleData(20, (byte)0x75, "str b", a, true);
+
+        Map<String, SimpleData> dataMap = new HashMap<>();
+        dataMap.put("1", a);
+        dataMap.put("2", b);
+
+        WithCollectionData withCollectionData = new WithCollectionData(10, (byte)0x34, "str a", null, true, arr, list, dataMap);
+
+        WithCollectionData test = (WithCollectionData) Main.copyOf(withCollectionData);
+        withCollectionData.setListString(Arrays.asList(new String[]{"0", "0", "0", "0", "0"}));
+        assertEquals(test.getListString().get(2), "3");
+
+    }
+
+    @Test
+    public void withCollectionDataMapCopyTest(){
+        String[] arr = {"1", "2", "3", "4", "5"};
+        ArrayList<String> list = new ArrayList<>(Arrays.asList(arr));
+        SimpleData a = new SimpleData(10, (byte)0x34, "str a", null, true);
+        SimpleData b = new SimpleData(20, (byte)0x75, "str b", a, true);
+
+        Map<String, SimpleData> dataMap = new HashMap<>();
+        dataMap.put("1", a);
+        dataMap.put("2", b);
+        WithCollectionData withCollectionData = new WithCollectionData(10, (byte)0x34, "str a", null, true, arr, list, dataMap);
+
+        WithCollectionData test = (WithCollectionData) Main.copyOf(withCollectionData);
+        dataMap.remove("1");
+
+        withCollectionData.setMapStringSimpleData(dataMap);
+        assertEquals(test.getMapStringSimpleData().get("1").getStringData(), "str a");
+
     }
 
 

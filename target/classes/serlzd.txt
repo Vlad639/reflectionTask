@@ -1,0 +1,33 @@
+:WithCollectionData = 
+{
+   listString:java.util.List = 
+   Вяз,
+   Кедр,
+   Липа;
+   mapStringSimpleData:java.util.Map = {
+      three c,
+      {
+         intData:int = 10;
+         byteData:byte = 18;
+         stringData:java.lang.String = Деревья;
+         simpleData:SimpleData - Объект
+         boolData:boolean = false;
+      },
+      two b,
+      {
+         intData:int = 10;
+         byteData:byte = 18;
+         stringData:java.lang.String = Деревья;
+         simpleData:SimpleData - Объект
+         boolData:boolean = false;
+      },
+      one a,
+      {
+         intData:int = 10;
+         byteData:byte = 18;
+         stringData:java.lang.String = Деревья;
+         simpleData:SimpleData - Объект
+         boolData:boolean = false;
+      },
+   };
+};

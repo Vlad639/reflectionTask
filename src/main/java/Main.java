@@ -1,9 +1,7 @@
-import com.sun.jdi.PrimitiveValue;
-
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -11,38 +9,12 @@ import java.util.*;
 
 public class Main {
 
+    public static void main(String[] args)  {
+        SimpleData a = new SimpleData(10, (byte)0x34, "str a", null, true);
+        SimpleData b = new SimpleData(20, (byte)0x75, "str b", a, true);
+        SimpleData c = new SimpleData(30, (byte)0x91, "str c", b, true);
 
-    public static void main(String[] args) throws IllegalAccessException {
-
-        String[] stringArray = new String[5];
-        stringArray[0] = "ель";
-        stringArray[1] = "берёза";
-        stringArray[2] = "тополь";
-        stringArray[3] = "ясень";
-        stringArray[4] = "дуб";
-
-        List<String> listTrees= new ArrayList<>();
-        listTrees.add("Вяз");
-        listTrees.add("Кедр");
-        listTrees.add("Липа");
-
-        SimpleData a = new SimpleData(32, (byte)0x63, "--a--", true);
-        SimpleData b = new SimpleData(54, (byte)0x53, "--b--", false);
-        SimpleData c = new SimpleData(12, (byte)0x99, "--c--", true);
-
-        Map<String, SimpleData> mapStringSimpleData = new HashMap<>();
-        mapStringSimpleData.put("one a", a);
-        mapStringSimpleData.put("two b", b);
-        mapStringSimpleData.put("three c", c);
-
-
-        WithCollectionData withCollectionData =
-                new WithCollectionData(10, (byte)0x12, false,
-                        "Деревья", stringArray, listTrees, mapStringSimpleData);
-
-
-        serializeObject(withCollectionData);
-
+        SimpleData d = (SimpleData) Main.copyOf(c);
     }
 
     private static String primitiveValueToString(Object obj, Field f) {
@@ -173,9 +145,6 @@ public class Main {
     }
 
 
-
-
-
     private static void printLine() {
         System.out.println("--------------------------------------------");
     }
@@ -215,7 +184,6 @@ public class Main {
 
 
     }
-
 
     public static void publicPrintMethodsNames(Object object){ //public для тестов
         printMethodsNames(object);
@@ -276,27 +244,98 @@ public class Main {
         }
     }
 
-    public static void copy(Object source, Object dist) {
-        Class<?> sourceClass = source.getClass();
-        Class<?> distClass = dist.getClass();
-        Field[] sourceFields = sourceClass.getDeclaredFields();
-        for (Field sourceField : sourceFields) {
-            try {
-                Field distField = distClass.getDeclaredField(sourceField.getName());
-                sourceField.setAccessible(true);
-                distField.setAccessible(true);
-                distField.set(dist, sourceField.get(source));
-            } catch (Exception e) {
-                System.out.println(e);
+
+
+    public static String[] copyArray(String[] arr){
+        ArrayList<String> returnArr = new ArrayList<>(Arrays.asList(arr));
+        return returnArr.toArray(new String[0]);
+    }
+
+    public static List<String> copyList(List<String> list){
+        ArrayList<String> returnList = new ArrayList<>();
+        returnList.addAll(list);
+        return returnList;
+    }
+
+    public static SimpleData copySimpleData(SimpleData source){
+
+        if (source == null) return null;
+
+        Object objectData = new Object();
+
+        if (source.getObjectData() instanceof SimpleData)
+            objectData = copySimpleData((SimpleData) source.getObjectData());
+
+        return new SimpleData(
+                source.getIntData(),
+                source.getByteData(),
+                source.getStringData(),
+                objectData,
+                source.isBoolData()
+        );
+    }
+
+    public  static Map<String, SimpleData> copyCollection(Map<String, SimpleData> collectoin){
+        HashMap<String, SimpleData> returnCollection = new HashMap<>();
+
+        for(Map.Entry<String, SimpleData> entry : collectoin.entrySet()) {
+            String key = entry.getKey();
+            SimpleData value = entry.getValue();
+            returnCollection.put(key, copySimpleData(value));
+        }
+        return returnCollection;
+    }
+
+    public static Object copy(Object source) {
+
+
+        Method [] methods = source.getClass().getDeclaredMethods();
+        for (Method method: methods) {
+            if (method.isAnnotationPresent(noCopy.class)){
+                System.err.println("A-A-A-A");
             }
         }
+
+        String sourceTypeName = source.getClass().getTypeName();
+        if (sourceTypeName.equals("WithCollectionData")){
+            WithCollectionData current = (WithCollectionData) source;
+            WithCollectionData newObject = new WithCollectionData(
+                    current.getIntData(),
+                    current.getByteData(),
+                    current.getStringData(),
+                    copySimpleData((SimpleData) current.getObjectData()),
+                    current.isBoolData(),
+                    copyArray(current.getStringArray()),
+                    copyList(current.getListString()),
+                    copyCollection(current.getMapStringSimpleData()));
+            return newObject;
+        }
+
+        if (sourceTypeName.equals("WithArrayData")){
+            WithArrayData current = (WithArrayData) source;
+            Object buf;
+            buf = current.getObjectData();
+            return new WithArrayData(
+                    current.getIntData(),
+                    current.getByteData(),
+                    current.getStringData(),
+                    copySimpleData((SimpleData) source),
+                    current.isBoolData(),
+                    copyArray(current.getStringArray())
+            );
+        }
+
+        if (sourceTypeName.equals("SimpleData")){
+            return copySimpleData((SimpleData) source);
+        }
+
+        return source;
     }
 
     public static Object copyOf(Object source) {
         try {
-            Constructor<?> constructor = source.getClass().getConstructor();
-            Object dist = constructor.newInstance();
-            copy(source, dist);
+            Object dist;
+            dist = copy(source);
             return dist;
         } catch (Exception e) {
             return null;

@@ -9,8 +9,12 @@ public class WithCollectionData extends WithArrayData {
     private List<String> listString;
     private Map<String, SimpleData> mapStringSimpleData;
 
-    public WithCollectionData(int intData, byte byteData, boolean boolData, String stringData, String[] stringArray, List<String> listString, Map<String, SimpleData> mapStringSimpleData) {
-        super(intData, byteData, boolData, stringData, stringArray);
+    public WithCollectionData(){
+
+    }
+
+    public WithCollectionData(int intData, byte byteData, String stringData, Object objectData, boolean boolData, String[] stringArray, List<String> listString, Map<String, SimpleData> mapStringSimpleData) {
+        super( intData,  byteData,  stringData,  objectData,  boolData, stringArray);
         this.listString = listString;
         this.mapStringSimpleData = mapStringSimpleData;
     }
